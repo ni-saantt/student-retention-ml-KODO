@@ -5,6 +5,7 @@
 from flask import Flask, request, jsonify
 import joblib
 import numpy as np
+import csv
 
 from flask_cors import CORS
 app = Flask(__name__)
@@ -17,6 +18,117 @@ scaler = joblib.load('kodo_scaler.pkl')
 print("model loaded successfully")
 print("scaler loaded successfully")
 
+TRAINING_STATS = None
+
+def calculate_training_stats():
+    global TRAINING_STATS
+    try:
+        students_data = []
+        with open('kodo_students_v2.csv', mode='r') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                students_data.append({
+                    'logins_per_week': float(row['logins_per_week']),
+                    'avg_time_per_session': float(row['avg_time_per_session']),
+                    'quiz_score_avg': float(row['quiz_score_avg']),
+                    'modules_completed': float(row['modules_completed']),
+                    'days_since_login': float(row['days_since_login']),
+                    'revisit_count': float(row['revisit_count']),
+                    'assignment_submissions': float(row['assignment_submissions']),
+                    'forum_activity': float(row['forum_activity']),
+                    'video_watch_pct': float(row['video_watch_pct']),
+                    'at_risk': int(row['at_risk'])
+                })
+        
+        # Prepare for predictions
+        features_list = []
+        for s in students_data:
+            features_list.append([s[f] for f in FEATURES])
+        
+        X = np.array(features_list)
+        X_scaled = scaler.transform(X)
+        probs = model.predict_proba(X_scaled)[:, 1]
+        
+        for i, s in enumerate(students_data):
+            s['probability'] = float(probs[i])
+            
+        total = len(students_data)
+        at_risk_gt_count = sum(1 for s in students_data if s['at_risk'] == 1)
+        at_risk_rate = at_risk_gt_count / total
+        
+        avg_quiz = sum(s['quiz_score_avg'] for s in students_data) / total
+        avg_video = sum(s['video_watch_pct'] for s in students_data) / total
+        
+        # Bins for logins_per_week
+        eng_bins = {
+            '0–2 logins': {'total': 0, 'risk': 0},
+            '3–4': {'total': 0, 'risk': 0},
+            '5–7': {'total': 0, 'risk': 0},
+            '8–10': {'total': 0, 'risk': 0},
+            '11–13': {'total': 0, 'risk': 0}
+        }
+        for s in students_data:
+            logins = s['logins_per_week']
+            if logins <= 2:
+                bin_name = '0–2 logins'
+            elif logins <= 4:
+                bin_name = '3–4'
+            elif logins <= 7:
+                bin_name = '5–7'
+            elif logins <= 10:
+                bin_name = '8–10'
+            else:
+                bin_name = '11–13'
+                
+            eng_bins[bin_name]['total'] += 1
+            if s['at_risk'] == 1:
+                eng_bins[bin_name]['risk'] += 1
+                
+        eng_chart_data = []
+        for label in ['0–2 logins', '3–4', '5–7', '8–10', '11–13']:
+            b = eng_bins[label]
+            pct = (b['risk'] / b['total'] * 100) if b['total'] > 0 else 0
+            eng_chart_data.append(round(pct, 1))
+            
+        # Cohorts
+        cohorts = {
+            'Low Engagement': {'high': 0, 'medium': 0, 'low': 0},
+            'Mid Engagement': {'high': 0, 'medium': 0, 'low': 0},
+            'High Engagement': {'high': 0, 'medium': 0, 'low': 0}
+        }
+        for s in students_data:
+            logins = s['logins_per_week']
+            if logins <= 3:
+                c_name = 'Low Engagement'
+            elif logins <= 7:
+                c_name = 'Mid Engagement'
+            else:
+                c_name = 'High Engagement'
+                
+            prob = s['probability']
+            if prob >= 0.75:
+                cohorts[c_name]['high'] += 1
+            elif prob >= 0.50:
+                cohorts[c_name]['medium'] += 1
+            else:
+                cohorts[c_name]['low'] += 1
+                
+        cohort_chart_data = {
+            'High Risk': [cohorts['Low Engagement']['high'], cohorts['Mid Engagement']['high'], cohorts['High Engagement']['high']],
+            'Medium Risk': [cohorts['Low Engagement']['medium'], cohorts['Mid Engagement']['medium'], cohorts['High Engagement']['medium']],
+            'Low Risk': [cohorts['Low Engagement']['low'], cohorts['Mid Engagement']['low'], cohorts['High Engagement']['low']]
+        }
+        
+        TRAINING_STATS = {
+            'total_students': total,
+            'at_risk_rate': round(at_risk_rate * 100, 1),
+            'avg_quiz_score': round(avg_quiz, 1),
+            'avg_video_watch': round(avg_video, 1),
+            'eng_chart_data': eng_chart_data,
+            'cohort_chart_data': cohort_chart_data
+        }
+    except Exception as e:
+        print(f"Error calculating training stats: {str(e)}")
 
 # health check — open in browser to confirm server is alive
 @app.route('/', methods=['GET'])
@@ -26,6 +138,15 @@ def home():
         'version' : '1.0',
         'endpoint': 'POST /predict'
     })
+
+@app.route('/training-stats', methods=['GET'])
+def training_stats():
+    global TRAINING_STATS
+    if TRAINING_STATS is None:
+        calculate_training_stats()
+    if TRAINING_STATS is None:
+        return jsonify({'error': 'could not calculate training stats'}), 500
+    return jsonify(TRAINING_STATS)
 
 
 # feature order must match training data exactly

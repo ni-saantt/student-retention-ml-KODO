@@ -1,0 +1,2426 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KODO — Instructor Intelligence</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --navy: #0b1629;
+      --navy-2: #112040;
+      --navy-3: #1a3260;
+      --accent: #3b82f6;
+      --accent-glow: rgba(59, 130, 246, 0.18);
+      --red: #ef4444;
+      --red-s: rgba(239, 68, 68, 0.12);
+      --amber: #f59e0b;
+      --amber-s: rgba(245, 158, 11, 0.12);
+      --green: #22c55e;
+      --green-s: rgba(34, 197, 94, 0.12);
+      --surface: #ffffff;
+      --surface-2: #f8fafc;
+      --border: #e8edf5;
+      --text-1: #0f172a;
+      --text-2: #475569;
+      --text-3: #94a3b8;
+      --mono: 'JetBrains Mono', monospace;
+      --sans: 'Sora', sans-serif;
+      --r: 14px;
+      --r-lg: 20px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--sans);
+      background: var(--surface-2);
+      color: var(--text-1);
+      min-height: 100vh;
+      font-size: 14px;
+    }
+
+    /* ── SIDEBAR ── */
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 240px;
+      flex-shrink: 0;
+      background: var(--navy);
+      display: flex;
+      flex-direction: column;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      padding: 0 0 24px;
+    }
+
+    .sb-logo {
+      padding: 28px 24px 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      margin-bottom: 12px;
+    }
+
+    .sb-logo-mark {
+      width: 38px;
+      height: 38px;
+      background: var(--accent);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -1px;
+      margin-bottom: 14px;
+      box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
+    }
+
+    .sb-logo-name {
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .sb-logo-proto {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--accent);
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    .sb-logo-sub {
+      color: rgba(255, 255, 255, 0.3);
+      font-size: 11px;
+      font-weight: 400;
+      margin-top: 4px;
+    }
+
+    .sb-section {
+      padding: 0 12px;
+      margin-bottom: 4px;
+    }
+
+    .sb-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: rgba(255, 255, 255, 0.25);
+      padding: 8px 12px 6px;
+    }
+
+    .sb-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.15s;
+      margin-bottom: 2px;
+      border: none;
+      background: transparent;
+      font-family: var(--sans);
+      width: 100%;
+      text-align: left;
+    }
+
+    .sb-item:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .sb-item.active {
+      background: rgba(59, 130, 246, 0.15);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .sb-item .icon {
+      width: 18px;
+      height: 18px;
+      stroke-width: 2px;
+      flex-shrink: 0;
+    }
+
+    .sb-item .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+
+    .sb-item .dot.red {
+      background: var(--red);
+    }
+
+    .sb-footer {
+      margin-top: auto;
+      padding: 16px 12px 0;
+    }
+
+    .sb-model-card {
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      border-radius: 12px;
+      padding: 14px 16px;
+    }
+
+    .sb-model-card .m-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: rgba(255, 255, 255, 0.3);
+      margin-bottom: 6px;
+    }
+
+    .sb-model-card .m-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .sb-model-card .m-stat {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 3px;
+    }
+
+    .sb-model-card .m-stat span:first-child {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    .sb-model-card .m-stat span:last-child {
+      font-size: 11px;
+      font-family: var(--mono);
+      color: var(--accent);
+    }
+
+    /* ── MAIN ── */
+    .main {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* TOP BAR */
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .topbar-left {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-1);
+      letter-spacing: -0.3px;
+    }
+
+    .topbar-sub {
+      font-size: 12px;
+      color: var(--text-3);
+      margin-top: 1px;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .topbar-badge {
+      background: var(--green-s);
+      border: 1px solid rgba(34, 197, 94, 0.25);
+      color: var(--green);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 99px;
+      font-family: var(--mono);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .topbar-badge::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.4;
+      }
+    }
+
+    /* PAGE CONTENT */
+    .page {
+      padding: 28px 32px;
+      flex: 1;
+    }
+
+    .page-panel {
+      display: none;
+    }
+
+    .page-panel.active {
+      display: block;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ── WELCOME ROW ── */
+    .welcome-row {
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-3) 100%);
+      border-radius: var(--r-lg);
+      padding: 28px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .welcome-row::before {
+      content: '';
+      position: absolute;
+      right: -40px;
+      top: -40px;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: rgba(59, 130, 246, 0.08);
+    }
+
+    .welcome-row::after {
+      content: '';
+      position: absolute;
+      right: 60px;
+      bottom: -60px;
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      background: rgba(59, 130, 246, 0.05);
+    }
+
+    .welcome-text h2 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.5px;
+      margin-bottom: 5px;
+    }
+
+    .welcome-text p {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.45);
+      max-width: 400px;
+      line-height: 1.5;
+    }
+
+    .welcome-stats {
+      display: flex;
+      gap: 32px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .ws-item {
+      text-align: right;
+    }
+
+    .ws-item .ws-val {
+      font-size: 28px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+
+    .ws-item .ws-label {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.35);
+      margin-top: 3px;
+      font-weight: 500;
+    }
+
+    /* ── KPI GRID ── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 20px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: box-shadow 0.15s;
+    }
+
+    .kpi-card:hover {
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
+    }
+
+    .kpi-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .kpi-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .kpi-icon.blue {
+      background: var(--accent-glow);
+      color: var(--accent);
+    }
+
+    .kpi-icon.red {
+      background: var(--red-s);
+      color: var(--red);
+    }
+
+    .kpi-icon.amber {
+      background: var(--amber-s);
+      color: var(--amber);
+    }
+
+    .kpi-icon.green {
+      background: var(--green-s);
+      color: var(--green);
+    }
+
+    .kpi-icon svg {
+      width: 20px;
+      height: 20px;
+      stroke-width: 2px;
+    }
+
+    .kpi-trend {
+      font-size: 11px;
+      font-weight: 600;
+      font-family: var(--mono);
+      padding: 3px 8px;
+      border-radius: 99px;
+    }
+
+    .kpi-trend.up {
+      background: var(--red-s);
+      color: var(--red);
+    }
+
+    .kpi-trend.down {
+      background: var(--green-s);
+      color: var(--green);
+    }
+
+    .kpi-val {
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      line-height: 1;
+    }
+
+    .kpi-label {
+      font-size: 12px;
+      color: var(--text-3);
+      font-weight: 500;
+    }
+
+    /* ── GRID LAYOUTS ── */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .grid-3-2 {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 22px 24px;
+    }
+
+    .card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-1);
+      letter-spacing: -0.2px;
+    }
+
+    .card-sub {
+      font-size: 12px;
+      color: var(--text-3);
+      margin-top: 2px;
+    }
+
+    .chip {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 99px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text-3);
+      font-family: var(--mono);
+    }
+
+    /* ── FORM ── */
+    .form-section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-3);
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .name-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-2);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    .field input {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--r);
+      font-size: 13px;
+      font-family: var(--mono);
+      color: var(--text-1);
+      background: var(--surface-2);
+      outline: none;
+      transition: all 0.15s;
+    }
+
+    .field input:focus {
+      border-color: var(--accent);
+      background: #fff;
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .field input::placeholder {
+      color: var(--text-3);
+    }
+
+    .field .hint {
+      font-size: 10px;
+      color: var(--text-3);
+      margin-top: 4px;
+      font-family: var(--mono);
+    }
+
+    /* ── BUTTONS ── */
+    .btn {
+      padding: 10px 24px;
+      background: var(--navy);
+      color: #fff;
+      border: none;
+      border-radius: var(--r);
+      font-size: 13px;
+      font-weight: 600;
+      font-family: var(--sans);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      transition: all 0.15s;
+    }
+
+    .btn:hover {
+      background: var(--navy-3);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(11, 22, 41, 0.2);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1.5px solid var(--border);
+      color: var(--text-2);
+    }
+
+    .btn-ghost:hover {
+      background: var(--surface-2);
+      box-shadow: none;
+      transform: none;
+      border-color: var(--text-3);
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    /* ── RISK RESULT ── */
+    .risk-result {
+      display: none;
+      margin-top: 20px;
+      border-radius: var(--r);
+      padding: 22px 24px;
+      border: 1.5px solid;
+      animation: fadeIn 0.25s ease;
+    }
+
+    .risk-result.high {
+      background: var(--red-s);
+      border-color: rgba(239, 68, 68, 0.25);
+    }
+
+    .risk-result.medium {
+      background: var(--amber-s);
+      border-color: rgba(245, 158, 11, 0.25);
+    }
+
+    .risk-result.low {
+      background: var(--green-s);
+      border-color: rgba(34, 197, 94, 0.25);
+    }
+
+    .rr-top {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+
+    .rr-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .rr-icon svg {
+      width: 24px;
+      height: 24px;
+      stroke-width: 2.5px;
+      color: #fff;
+    }
+
+    .high .rr-icon {
+      background: var(--red);
+    }
+
+    .medium .rr-icon {
+      background: var(--amber);
+    }
+
+    .low .rr-icon {
+      background: var(--green);
+    }
+
+    .indicator-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+
+    .indicator-dot.red {
+      background: var(--red);
+    }
+
+    .indicator-dot.amber {
+      background: var(--amber);
+    }
+
+    .indicator-dot.green {
+      background: var(--green);
+    }
+
+    .rr-label {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .high .rr-label {
+      color: var(--red);
+    }
+
+    .medium .rr-label {
+      color: var(--amber);
+    }
+
+    .low .rr-label {
+      color: var(--green);
+    }
+
+    .rr-prob {
+      font-size: 12px;
+      color: var(--text-2);
+      margin-top: 2px;
+      font-family: var(--mono);
+    }
+
+    .rr-bar-bg {
+      height: 6px;
+      background: rgba(0, 0, 0, 0.08);
+      border-radius: 99px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+
+    .rr-bar {
+      height: 100%;
+      border-radius: 99px;
+      transition: width 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .high .rr-bar {
+      background: var(--red);
+    }
+
+    .medium .rr-bar {
+      background: var(--amber);
+    }
+
+    .low .rr-bar {
+      background: var(--green);
+    }
+
+    .rr-msg {
+      font-size: 13px;
+      color: var(--text-2);
+      font-style: italic;
+    }
+
+    /* ── RISK LEGEND ── */
+    .risk-legend {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .rl-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-2);
+    }
+
+    .rl-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .rl-dot.high {
+      background: var(--red);
+    }
+
+    .rl-dot.medium {
+      background: var(--amber);
+    }
+
+    .rl-dot.low {
+      background: var(--green);
+    }
+
+    /* ── HISTORY ── */
+    .history-scroll {
+      max-height: 280px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .h-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-radius: var(--r);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+    }
+
+    .h-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-1);
+    }
+
+    .h-id {
+      font-size: 11px;
+      color: var(--text-3);
+      font-family: var(--mono);
+      margin-top: 1px;
+    }
+
+    .h-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .h-pct {
+      font-size: 12px;
+      font-family: var(--mono);
+      color: var(--text-2);
+    }
+
+    .h-empty {
+      text-align: center;
+      padding: 32px;
+      color: var(--text-3);
+      font-size: 13px;
+    }
+
+    /* ── BADGE ── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 9px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: var(--sans);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .badge::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .badge.high {
+      background: var(--red-s);
+      color: var(--red);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .badge.medium {
+      background: var(--amber-s);
+      color: var(--amber);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .badge.low {
+      background: var(--green-s);
+      color: var(--green);
+      border: 1px solid rgba(34, 197, 94, 0.2);
+    }
+
+    /* ── UPLOAD ── */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--r-lg);
+      padding: 44px 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: var(--surface-2);
+      margin-bottom: 18px;
+    }
+
+    .upload-zone:hover {
+      border-color: var(--accent);
+      background: var(--accent-glow);
+    }
+
+    .upload-zone.drag {
+      border-color: var(--accent);
+      background: var(--accent-glow);
+    }
+
+    .uz-icon {
+      margin-bottom: 10px;
+      color: var(--text-3);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .uz-icon svg {
+      width: 36px;
+      height: 36px;
+      stroke-width: 1.5px;
+    }
+
+    .upload-zone:hover .uz-icon {
+      color: var(--accent);
+    }
+
+    .uz-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-1);
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .uz-sub {
+      font-size: 12px;
+      color: var(--text-3);
+      margin-bottom: 14px;
+    }
+
+    .uz-fmt {
+      font-size: 10px;
+      font-family: var(--mono);
+      color: var(--text-3);
+      background: var(--surface);
+      padding: 4px 10px;
+      border-radius: 6px;
+      display: inline-block;
+      border: 1px solid var(--border);
+    }
+
+    #fileInput {
+      display: none;
+    }
+
+    /* ── SUMMARY CARDS ── */
+    .sum-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .sum-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 18px 20px;
+    }
+
+    .sum-card .s-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-3);
+      margin-bottom: 7px;
+    }
+
+    .sum-card .s-val {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+
+    .sum-card.t .s-val {
+      color: var(--navy);
+    }
+
+    .sum-card.h .s-val {
+      color: var(--red);
+    }
+
+    .sum-card.m .s-val {
+      color: var(--amber);
+    }
+
+    .sum-card.l .s-val {
+      color: var(--green);
+    }
+
+    /* ── FILTER ── */
+    .filter-bar {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .f-btn {
+      padding: 5px 14px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 700;
+      border: 1.5px solid var(--border);
+      cursor: pointer;
+      background: var(--surface);
+      color: var(--text-3);
+      font-family: var(--sans);
+      transition: all 0.12s;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .f-btn.active {
+      background: var(--navy);
+      color: #fff;
+      border-color: var(--navy);
+    }
+
+    .f-btn.h.active {
+      background: var(--red);
+      border-color: var(--red);
+    }
+
+    .f-btn.m.active {
+      background: var(--amber);
+      border-color: var(--amber);
+    }
+
+    .f-btn.l.active {
+      background: var(--green);
+      border-color: var(--green);
+    }
+
+    /* ── TABLE ── */
+    .tbl-wrap {
+      overflow-x: auto;
+      border-radius: var(--r);
+      border: 1px solid var(--border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    thead {
+      background: var(--navy);
+      color: #fff;
+    }
+
+    thead th {
+      padding: 11px 14px;
+      text-align: left;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      white-space: nowrap;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.1s;
+    }
+
+    tbody tr:last-child {
+      border-bottom: none;
+    }
+
+    tbody tr:hover {
+      background: var(--surface-2);
+    }
+
+    tbody td {
+      padding: 10px 14px;
+      color: var(--text-2);
+      font-family: var(--mono);
+    }
+
+    tbody td:first-child {
+      font-family: var(--sans);
+      font-weight: 600;
+      color: var(--text-1);
+    }
+
+    .mini-bar {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .mini-bg {
+      flex: 1;
+      height: 4px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+      min-width: 50px;
+    }
+
+    .mini-fill {
+      height: 100%;
+      border-radius: 99px;
+    }
+
+    /* ── ANALYTICS ── */
+    .signal-bar-item {
+      margin-bottom: 11px;
+    }
+
+    .signal-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .signal-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-2);
+    }
+
+    .signal-pct {
+      font-size: 11px;
+      font-family: var(--mono);
+      color: var(--text-3);
+    }
+
+    .signal-bg {
+      height: 6px;
+      background: var(--surface-2);
+      border-radius: 99px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .signal-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .impact-card {
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-3) 100%);
+      border-radius: var(--r);
+      padding: 22px 24px;
+    }
+
+    .impact-card .ic-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .impact-card .ic-sub {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.35);
+      margin-bottom: 20px;
+    }
+
+    .ic-stat {
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+    }
+
+    .ic-stat:last-child {
+      margin-bottom: 0;
+    }
+
+    .ic-stat .ic-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: rgba(255, 255, 255, 0.3);
+      margin-bottom: 5px;
+    }
+
+    .ic-stat .ic-val {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .ic-stat .ic-note {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.3);
+      margin-top: 3px;
+    }
+
+    .insight-item {
+      display: flex;
+      gap: 14px;
+      padding: 14px 16px;
+      border-radius: var(--r);
+      border: 1px solid;
+      margin-bottom: 10px;
+      align-items: flex-start;
+    }
+
+    .insight-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .insight-item.red {
+      background: var(--red-s);
+      border-color: rgba(239, 68, 68, 0.2);
+    }
+
+    .insight-item.amber {
+      background: var(--amber-s);
+      border-color: rgba(245, 158, 11, 0.2);
+    }
+
+    .insight-item.green {
+      background: var(--green-s);
+      border-color: rgba(34, 197, 94, 0.2);
+    }
+
+    .insight-item.blue {
+      background: var(--accent-glow);
+      border-color: rgba(59, 130, 246, 0.2);
+    }
+
+    .insight-icon {
+      flex-shrink: 0;
+      margin-top: 2px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .insight-icon svg {
+      width: 20px;
+      height: 20px;
+      stroke-width: 2px;
+    }
+
+    .insight-title {
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .insight-item.red .insight-title {
+      color: var(--red);
+    }
+
+    .insight-item.amber .insight-title {
+      color: var(--amber);
+    }
+
+    .insight-item.green .insight-title {
+      color: var(--green);
+    }
+
+    .insight-item.blue .insight-title {
+      color: var(--accent);
+    }
+
+    .insight-item.red .insight-icon {
+      color: var(--red);
+    }
+
+    .insight-item.amber .insight-icon {
+      color: var(--amber);
+    }
+
+    .insight-item.green .insight-icon {
+      color: var(--green);
+    }
+
+    .insight-item.blue .insight-icon {
+      color: var(--accent);
+    }
+
+    .insight-body {
+      font-size: 12px;
+      color: var(--text-2);
+      line-height: 1.55;
+    }
+
+    .perf-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .perf-card {
+      text-align: center;
+      padding: 18px 12px;
+      background: var(--surface-2);
+      border-radius: var(--r);
+      border: 1px solid var(--border);
+    }
+
+    .perf-val {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--navy);
+      letter-spacing: -1px;
+    }
+
+    .perf-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-3);
+      margin-top: 5px;
+    }
+
+    /* ── CHART CARD ── */
+    .chart-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 22px 24px;
+      margin-bottom: 20px;
+    }
+
+    .chart-card canvas {
+      max-height: 230px;
+    }
+
+    /* ── SPINNER ── */
+    .spin {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: rot 0.7s linear infinite;
+    }
+
+    @keyframes rot {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* ── ERROR ── */
+    .err {
+      background: #fff5f5;
+      border: 1.5px solid #fecaca;
+      border-radius: var(--r);
+      padding: 12px 16px;
+      font-size: 12px;
+      color: #dc2626;
+      margin-top: 14px;
+      display: none;
+    }
+
+    /* ── FOOTER ── */
+    .page-footer {
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-3);
+      padding: 24px 32px;
+      border-top: 1px solid var(--border);
+    }
+
+    @media(max-width:900px) {
+      .sidebar {
+        display: none;
+      }
+
+      .kpi-grid,
+      .sum-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .grid-2,
+      .grid-3-2 {
+        grid-template-columns: 1fr;
+      }
+
+      .form-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .page {
+        padding: 20px 16px;
+      }
+
+      .topbar {
+        padding: 0 16px;
+      }
+
+      .welcome-stats {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="layout">
+
+    <!-- ── SIDEBAR ── -->
+    <aside class="sidebar">
+      <div class="sb-logo">
+        <div class="sb-logo-mark">K</div>
+        <div class="sb-logo-name">KODO</div>
+        <div class="sb-logo-proto">(Prototype)</div>
+        <div class="sb-logo-sub">Instructor Intelligence</div>
+      </div>
+
+      <div class="sb-section">
+        <div class="sb-label">Main</div>
+        <button class="sb-item active" onclick="navTo('overview',this)">
+          <i data-lucide="home" class="icon"></i> Overview
+        </button>
+        <button class="sb-item" onclick="navTo('single',this)">
+          <i data-lucide="shield-alert" class="icon"></i> Risk Check
+          <span class="dot red"></span>
+        </button>
+        <button class="sb-item" onclick="navTo('batch',this)">
+          <i data-lucide="file-spreadsheet" class="icon"></i> Batch Check
+        </button>
+        <button class="sb-item" onclick="navTo('analytics',this)">
+          <i data-lucide="bar-chart-3" class="icon"></i> Analytics
+        </button>
+      </div>
+
+      <div class="sb-footer">
+        <div class="sb-model-card">
+          <div class="m-label">Active Model</div>
+          <div class="m-name">XGBoost v1.0</div>
+          <div class="m-stat"><span>F1 Score</span><span>0.9333</span></div>
+          <div class="m-stat"><span>ROC-AUC</span><span>0.9783</span></div>
+          <div class="m-stat"><span>CV Mean</span><span>0.9273</span></div>
+          <div class="m-stat"><span>Students</span><span>1,200</span></div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ── MAIN ── -->
+    <div class="main">
+
+      <!-- TOP BAR -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-title" id="topbar-title">Overview</div>
+          <div class="topbar-sub" id="topbar-sub">KODO Dropout Prediction Dashboard</div>
+        </div>
+        <div class="topbar-right">
+          <div class="topbar-badge">Model Active</div>
+        </div>
+      </header>
+
+      <!-- ══ PAGE: OVERVIEW ══ -->
+      <div class="page-panel active" id="page-overview">
+        <div class="page">
+
+          <!-- WELCOME BANNER -->
+          <div class="welcome-row">
+            <div class="welcome-text">
+              <h2>Dropout Prediction System</h2>
+              <p>Monitor student engagement signals in real time. Flag at-risk students early and intervene before they
+                disengage from the platform.</p>
+            </div>
+            <div class="welcome-stats">
+              <div class="ws-item">
+                <div class="ws-val">0.93</div>
+                <div class="ws-label">F1 Score</div>
+              </div>
+              <div class="ws-item">
+                <div class="ws-val">9</div>
+                <div class="ws-label">Signals Tracked</div>
+              </div>
+              <div class="ws-item">
+                <div class="ws-val" id="ov-total-records">1,200</div>
+                <div class="ws-label">Training Records</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- KPI CARDS -->
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <div class="kpi-icon blue"><i data-lucide="book-open"></i></div>
+                <span class="kpi-trend up">+85.1% before fix</span>
+              </div>
+              <div class="kpi-val" style="color:var(--navy)" id="ov-at-risk-rate">45.2<span
+                  style="font-size:18px;font-weight:600">%</span></div>
+              <div class="kpi-label">At-Risk Rate in Dataset</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <div class="kpi-icon red"><i data-lucide="alert-triangle"></i></div>
+                <span class="kpi-trend up">top signal</span>
+              </div>
+              <div class="kpi-val" style="color:var(--red)">33<span style="font-size:18px;font-weight:600">%</span>
+              </div>
+              <div class="kpi-label">Video Watch % Importance</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <div class="kpi-icon green"><i data-lucide="check-circle"></i></div>
+                <span class="kpi-trend down">low variance</span>
+              </div>
+              <div class="kpi-val" style="color:var(--green)">0.008</div>
+              <div class="kpi-label">CV Std Deviation</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <div class="kpi-icon amber"><i data-lucide="target"></i></div>
+                <span class="kpi-trend down">best model</span>
+              </div>
+              <div class="kpi-val" style="color:var(--amber)">0.978</div>
+              <div class="kpi-label">ROC-AUC Score</div>
+            </div>
+          </div>
+
+          <!-- CHARTS ROW -->
+          <div class="grid-2">
+            <div class="chart-card" style="margin-bottom:0;">
+              <div class="card-head">
+                <div>
+                  <div class="card-title">At-Risk Rate by Engagement Level</div>
+                  <div class="card-sub">How dropout risk drops as logins increase</div>
+                </div>
+                <span class="chip">weekly logins</span>
+              </div>
+              <canvas id="engChart"></canvas>
+            </div>
+            <div class="chart-card" style="margin-bottom:0;">
+              <div class="card-head">
+                <div>
+                  <div class="card-title">Model Comparison</div>
+                  <div class="card-sub">F1 score across 3 trained models</div>
+                </div>
+                <span class="chip">before tuning</span>
+              </div>
+              <canvas id="modelChart"></canvas>
+            </div>
+          </div>
+
+        </div>
+        <div class="page-footer">KODO Dropout Prediction · XGBoost v1.0 · Built by Nishant Choudhary, ML Intern (Nov
+          2025 – Feb 2026)</div>
+      </div>
+
+      <!-- ══ PAGE: SINGLE ══ -->
+      <div class="page-panel" id="page-single">
+        <div class="page">
+
+          <div class="risk-legend">
+            <div class="rl-item">
+              <div class="rl-dot high"></div> High Risk ≥ 75%
+            </div>
+            <div class="rl-item">
+              <div class="rl-dot medium"></div> Medium Risk 50–74%
+            </div>
+            <div class="rl-item">
+              <div class="rl-dot low"></div> Low Risk &lt; 50%
+            </div>
+          </div>
+
+          <div class="grid-3-2">
+            <!-- FORM -->
+            <div class="card">
+              <div class="card-head">
+                <div>
+                  <div class="card-title">Student Risk Check</div>
+                  <div class="card-sub">Enter engagement data to predict dropout risk</div>
+                </div>
+              </div>
+
+              <div class="form-section-title">Student Identity</div>
+              <div class="name-row">
+                <div class="field">
+                  <label>Student Name</label>
+                  <input type="text" id="student_name" placeholder="e.g. Rahul Sharma" style="font-family:var(--sans);">
+                  <div class="hint">shown in history</div>
+                </div>
+                <div class="field">
+                  <label>Student ID</label>
+                  <input type="text" id="student_id" placeholder="e.g. STU-001" style="font-family:var(--sans);">
+                </div>
+              </div>
+
+              <div class="form-section-title">Engagement Signals</div>
+              <div class="form-grid">
+                <div class="field"><label>Logins / Week</label><input type="number" id="logins_per_week"
+                    placeholder="0–13" min="0" max="13">
+                  <div class="hint">weekly visits</div>
+                </div>
+                <div class="field"><label>Session Time (min)</label><input type="number" id="avg_time_per_session"
+                    placeholder="5–120" min="0" max="120">
+                  <div class="hint">avg per session</div>
+                </div>
+                <div class="field"><label>Quiz Score Avg %</label><input type="number" id="quiz_score_avg"
+                    placeholder="0–100" min="0" max="100">
+                  <div class="hint">across all quizzes</div>
+                </div>
+                <div class="field"><label>Modules Completed</label><input type="number" id="modules_completed"
+                    placeholder="0–20" min="0" max="20"></div>
+                <div class="field"><label>Days Since Login</label><input type="number" id="days_since_login"
+                    placeholder="0–30" min="0" max="30"></div>
+                <div class="field"><label>Revisit Count</label><input type="number" id="revisit_count" placeholder="0–9"
+                    min="0" max="9"></div>
+                <div class="field"><label>Assignments Submitted</label><input type="number" id="assignment_submissions"
+                    placeholder="0–12" min="0" max="12"></div>
+                <div class="field"><label>Forum Activity</label><input type="number" id="forum_activity"
+                    placeholder="0–10" min="0" max="10"></div>
+                <div class="field"><label>Video Watch %</label><input type="number" id="video_watch_pct"
+                    placeholder="0–100" min="0" max="100"></div>
+              </div>
+
+              <div class="btn-row">
+                <button class="btn" onclick="predictSingle()">
+                  <span id="btn-text">Predict Risk</span>
+                  <span id="btn-spin" class="spin hidden"></span>
+                </button>
+                <button class="btn btn-ghost" onclick="fillEx('high')">High Example</button>
+                <button class="btn btn-ghost" onclick="fillEx('medium')">Medium</button>
+                <button class="btn btn-ghost" onclick="fillEx('low')">Low</button>
+                <button class="btn btn-ghost" onclick="clearForm()">Clear</button>
+              </div>
+
+              <div class="err" id="single-err"></div>
+
+              <div class="risk-result" id="rr">
+                <div class="rr-top">
+                  <div class="rr-icon" id="rr-icon"></div>
+                  <div>
+                    <div class="rr-label" id="rr-label"></div>
+                    <div class="rr-prob" id="rr-prob"></div>
+                  </div>
+                </div>
+                <div class="rr-bar-bg">
+                  <div class="rr-bar" id="rr-bar" style="width:0%"></div>
+                </div>
+                <div class="rr-msg" id="rr-msg"></div>
+              </div>
+            </div>
+
+            <!-- HISTORY -->
+            <div class="card">
+              <div class="card-head">
+                <div>
+                  <div class="card-title">Prediction History</div>
+                  <div class="card-sub">This session</div>
+                </div>
+                <button class="btn btn-ghost" style="padding:5px 12px;font-size:11px;"
+                  onclick="clearHist()">Clear</button>
+              </div>
+              <div class="chart-card" id="hist-chart-wrap" style="display:none;padding:16px;margin-bottom:14px;">
+                <canvas id="histChart" style="max-height:160px;"></canvas>
+              </div>
+              <div class="history-scroll" id="hist-list">
+                <div class="h-empty">No predictions yet — check a student to see history here.</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <div class="page-footer">KODO Dropout Prediction · XGBoost v1.0 · Built by Nishant Choudhary, ML Intern</div>
+      </div>
+
+      <!-- ══ PAGE: BATCH ══ -->
+      <div class="page-panel" id="page-batch">
+        <div class="page">
+
+          <div class="card" style="margin-bottom:20px;">
+            <div class="card-head">
+              <div>
+                <div class="card-title">Batch Student Check</div>
+                <div class="card-sub">Upload a CSV to predict risk for your entire class at once</div>
+              </div>
+            </div>
+            <div class="upload-zone" id="drop-zone" onclick="document.getElementById('fileInput').click()">
+              <div class="uz-icon"><i data-lucide="upload-cloud"></i></div>
+              <div class="uz-title">Drop CSV here or click to browse</div>
+              <div class="uz-sub">One student per row · All 9 feature columns required</div>
+              <span class="uz-fmt">logins_per_week · avg_time_per_session · quiz_score_avg · modules_completed ·
+                days_since_login · revisit_count · assignment_submissions · forum_activity · video_watch_pct</span>
+            </div>
+            <input type="file" id="fileInput" accept=".csv" onchange="handleFile(event)">
+            <div class="btn-row">
+              <button class="btn" onclick="runBatch()" id="batch-btn" disabled>
+                <span id="batch-txt">Run Batch Prediction</span>
+                <span id="batch-spin" class="spin hidden"></span>
+              </button>
+              <button class="btn btn-ghost" onclick="dlSample()">Download Sample CSV</button>
+            </div>
+            <div class="err" id="batch-err"></div>
+          </div>
+
+          <div id="batch-results" class="hidden">
+            <div class="sum-grid">
+              <div class="sum-card t">
+                <div class="s-label">Total Students</div>
+                <div class="s-val" id="s-total">0</div>
+              </div>
+              <div class="sum-card h">
+                <div class="s-label"><span class="indicator-dot red"></span>High Risk</div>
+                <div class="s-val" id="s-high">0</div>
+              </div>
+              <div class="sum-card m">
+                <div class="s-label"><span class="indicator-dot amber"></span>Medium Risk</div>
+                <div class="s-val" id="s-med">0</div>
+              </div>
+              <div class="sum-card l">
+                <div class="s-label"><span class="indicator-dot green"></span>Low Risk</div>
+                <div class="s-val" id="s-low">0</div>
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div class="chart-card" style="margin-bottom:0;">
+                <div class="card-head">
+                  <div class="card-title">Risk Distribution</div>
+                </div>
+                <canvas id="donutChart" style="max-height:200px;"></canvas>
+              </div>
+              <div class="chart-card" style="margin-bottom:0;">
+                <div class="card-head">
+                  <div class="card-title">Risk Level Breakdown</div>
+                </div>
+                <canvas id="barBatch" style="max-height:200px;"></canvas>
+              </div>
+            </div>
+
+            <div class="card" style="padding:0;overflow:hidden;margin-top:20px;">
+              <div
+                style="padding:16px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+                <div class="card-title">Prediction Results</div>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                  <div class="filter-bar" style="margin-bottom:0;">
+                    <button class="f-btn active" onclick="filterTbl('all',this)">All</button>
+                    <button class="f-btn h" onclick="filterTbl('high',this)">High</button>
+                    <button class="f-btn m" onclick="filterTbl('medium',this)">Medium</button>
+                    <button class="f-btn l" onclick="filterTbl('low',this)">Low</button>
+                  </div>
+                  <button class="btn btn-ghost" style="padding:5px 14px;font-size:11px;" onclick="dlResults()">Export
+                    CSV</button>
+                </div>
+              </div>
+              <div class="tbl-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Name / ID</th>
+                      <th>Logins/wk</th>
+                      <th>Quiz %</th>
+                      <th>Modules</th>
+                      <th>Days Inactive</th>
+                      <th>Video %</th>
+                      <th>Risk Level</th>
+                      <th>Risk Score</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbl-body"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <div class="page-footer">KODO Dropout Prediction · XGBoost v1.0 · Built by Nishant Choudhary, ML Intern</div>
+      </div>
+
+      <!-- ══ PAGE: ANALYTICS ══ -->
+      <div class="page-panel" id="page-analytics">
+        <div class="page">
+
+          <!-- KPI ROW -->
+          <div class="kpi-grid" style="margin-bottom:24px;">
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <div class="kpi-icon blue"><i data-lucide="users"></i></div>
+              </div>
+              <div class="kpi-val" style="color:var(--navy)" id="an-total-students">1,200</div>
+              <div class="kpi-label">Students Analysed</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <div class="kpi-icon red"><i data-lucide="trending-down"></i></div>
+              </div>
+              <div class="kpi-val" style="color:var(--red)" id="an-at-risk-rate">45.2<span
+                  style="font-size:16px">%</span></div>
+              <div class="kpi-label">At-Risk Rate</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <div class="kpi-icon amber"><i data-lucide="clipboard-list"></i></div>
+              </div>
+              <div class="kpi-val" style="color:var(--amber)" id="an-avg-quiz">59.5</div>
+              <div class="kpi-label">Avg Quiz Score</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <div class="kpi-icon green"><i data-lucide="play"></i></div>
+              </div>
+              <div class="kpi-val" style="color:var(--green)" id="an-avg-video">51<span style="font-size:16px">%</span>
+              </div>
+              <div class="kpi-label">Avg Video Watch</div>
+            </div>
+          </div>
+
+          <!-- CHARTS -->
+          <div class="grid-2">
+            <div class="chart-card" style="margin-bottom:0;">
+              <div class="card-head">
+                <div>
+                  <div class="card-title">At-Risk Rate by Engagement Level</div>
+                  <div class="card-sub">Risk drops sharply as weekly logins increase</div>
+                </div>
+              </div>
+              <canvas id="an-eng"></canvas>
+            </div>
+            <div class="chart-card" style="margin-bottom:0;">
+              <div class="card-head">
+                <div>
+                  <div class="card-title">Cohort Risk Breakdown</div>
+                  <div class="card-sub">Low / Mid / High engagement cohorts</div>
+                </div>
+              </div>
+              <canvas id="an-cohort"></canvas>
+            </div>
+          </div>
+          <div style="height:20px;"></div>
+
+          <div class="grid-3-2">
+            <!-- SIGNALS -->
+            <div class="card">
+              <div class="card-head">
+                <div>
+                  <div class="card-title">Top Dropout Signals</div>
+                  <div class="card-sub">Ranked by XGBoost feature importance</div>
+                </div>
+              </div>
+              <div id="signal-bars"></div>
+            </div>
+
+            <!-- BUSINESS IMPACT -->
+            <div class="impact-card">
+              <div class="ic-title">Business Impact Estimate</div>
+              <div class="ic-sub">What at-risk students mean for KODO in business terms</div>
+              <div class="ic-stat">
+                <div class="ic-label">Estimated Churn Without Intervention</div>
+                <div class="ic-val" style="color:#f87171;">~38% <span
+                    style="font-size:13px;font-weight:400;color:rgba(255,255,255,0.35)">of at-risk</span></div>
+                <div class="ic-note">Industry avg EdTech churn for disengaged users</div>
+              </div>
+              <div class="ic-stat">
+                <div class="ic-label">Students Saved with Early Alerts</div>
+                <div class="ic-val" style="color:#4ade80;">~206 <span
+                    style="font-size:13px;font-weight:400;color:rgba(255,255,255,0.35)">students/year</span></div>
+                <div class="ic-note">If instructors act within 48h of high-risk flag</div>
+              </div>
+              <div class="ic-stat">
+                <div class="ic-label">Projected Retention Improvement</div>
+                <div class="ic-val" style="color:#60a5fa;">+17% <span
+                    style="font-size:13px;font-weight:400;color:rgba(255,255,255,0.35)">projected</span></div>
+                <div class="ic-note">Proactive outreach typically improves retention 15–20%</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="height:20px;"></div>
+
+          <!-- INSIGHTS -->
+          <div class="card" style="margin-bottom:20px;">
+            <div class="card-head">
+              <div>
+                <div class="card-title">Key Analytical Findings</div>
+                <div class="card-sub">Data-driven insights actionable for the KODO product and growth team</div>
+              </div>
+            </div>
+            <div class="insight-item red">
+              <div class="insight-icon"><i data-lucide="play"></i></div>
+              <div>
+                <div class="insight-title">Video Watch % is the strongest dropout predictor</div>
+                <div class="insight-body">Students watching less than 30% of course videos are 3.2× more likely to drop
+                  out. KODO should trigger automated nudges when watch percentage drops below this threshold mid-course.
+                </div>
+              </div>
+            </div>
+            <div class="insight-item amber">
+              <div class="insight-icon"><i data-lucide="file-text"></i></div>
+              <div>
+                <div class="insight-title">Assignment submission drop is an early warning signal</div>
+                <div class="insight-body">Students who stop submitting (fewer than 3 total) show at-risk patterns 2–3
+                  weeks before fully disengaging — the optimal window for instructor outreach.</div>
+              </div>
+            </div>
+            <div class="insight-item green">
+              <div class="insight-icon"><i data-lucide="message-square"></i></div>
+              <div>
+                <div class="insight-title">Forum activity correlates strongly with course completion</div>
+                <div class="insight-body">Students with 5+ forum interactions complete 2.1× more modules on average.
+                  Encouraging peer Q&A and instructor replies is a high-leverage retention strategy.</div>
+              </div>
+            </div>
+            <div class="insight-item blue">
+              <div class="insight-icon"><i data-lucide="target"></i></div>
+              <div>
+                <div class="insight-title">Quiz score alone is not enough to identify at-risk students</div>
+                <div class="insight-body">Quiz scores ranked 6th in feature importance. Many at-risk students score
+                  moderately on quizzes but disengage behaviourally — making video watch and forum activity more
+                  reliable early indicators.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- PERF -->
+          <div class="card">
+            <div class="card-head">
+              <div>
+                <div class="card-title">Model Performance Summary</div>
+                <div class="card-sub">Tuned XGBoost · 5-fold StratifiedKFold cross validation</div>
+              </div>
+            </div>
+            <div class="perf-grid">
+              <div class="perf-card">
+                <div class="perf-val">0.93</div>
+                <div class="perf-label">F1 Score</div>
+              </div>
+              <div class="perf-card">
+                <div class="perf-val">0.978</div>
+                <div class="perf-label">ROC-AUC</div>
+              </div>
+              <div class="perf-card">
+                <div class="perf-val">94%</div>
+                <div class="perf-label">Accuracy</div>
+              </div>
+              <div class="perf-card">
+                <div class="perf-val">0.008</div>
+                <div class="perf-label">CV Std Dev</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <div class="page-footer">KODO Dropout Prediction · XGBoost v1.0 · Built by Nishant Choudhary, ML Intern (Nov
+          2025 – Feb 2026)</div>
+      </div>
+
+    </div><!-- end .main -->
+  </div><!-- end .layout -->
+
+  <script>
+    const API = 'http://127.0.0.1:5000';
+    let history = [], batchData = [], batchRes = [], histChart = null, donut = null, barBatchChart = null;
+    let trainingStatsCached = null;
+    let currentAnalyticsSource = "Training Dataset";
+    let overviewEngChart = null;
+    let anEngChart = null;
+    let anCohortChart = null;
+
+    /* ── NAV ── */
+    function navTo(page, btn) {
+      document.querySelectorAll('.sb-item').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.page-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById('page-' + page).classList.add('active');
+      const titles = { overview: 'Overview', single: 'Risk Check', batch: 'Batch Check', analytics: 'Analytics' };
+      const subs = {
+        overview: 'KODO Dropout Prediction Dashboard',
+        single: 'Check individual student dropout risk',
+        batch: 'Upload a class CSV for bulk predictions',
+        analytics: `Data insights & business impact — Viewing ${currentAnalyticsSource}`
+      };
+      document.getElementById('topbar-title').textContent = titles[page];
+      document.getElementById('topbar-sub').textContent = subs[page];
+      if (page === 'analytics') initAnalytics();
+      if (page === 'overview') initOverview();
+    }
+
+    /* ── RISK UTILS ── */
+    function rlevel(p) { return p >= 0.75 ? 'high' : p >= 0.5 ? 'medium' : 'low'; }
+    function rlabel(l) { return { high: 'High Risk', medium: 'Medium Risk', low: 'Low Risk' }[l]; }
+    function rmsg(l) { return { high: 'High risk — this student needs immediate attention from their instructor.', medium: 'Moderate risk — keep an eye on this student and consider reaching out.', low: 'Low risk — student is engaged and doing well on the platform.' }[l]; }
+    function ricon(l) {
+      return {
+        high: '<i data-lucide="alert-circle"></i>',
+        medium: '<i data-lucide="alert-triangle"></i>',
+        low: '<i data-lucide="check-circle"></i>'
+      }[l];
+    }
+    function rcolor(l) { return { high: '#ef4444', medium: '#f59e0b', low: '#22c55e' }[l]; }
+
+    /* ── EXAMPLES ── */
+    function fillEx(t) {
+      const ex = { high: { logins_per_week: 1, avg_time_per_session: 10, quiz_score_avg: 25, modules_completed: 2, days_since_login: 25, revisit_count: 0, assignment_submissions: 1, forum_activity: 0, video_watch_pct: 10 }, medium: { logins_per_week: 4, avg_time_per_session: 35, quiz_score_avg: 48, modules_completed: 7, days_since_login: 12, revisit_count: 2, assignment_submissions: 4, forum_activity: 2, video_watch_pct: 35 }, low: { logins_per_week: 10, avg_time_per_session: 90, quiz_score_avg: 88, modules_completed: 17, days_since_login: 2, revisit_count: 8, assignment_submissions: 10, forum_activity: 8, video_watch_pct: 92 } };
+      Object.keys(ex[t]).forEach(k => document.getElementById(k).value = ex[t][k]);
+      document.getElementById('rr').style.display = 'none';
+      document.getElementById('single-err').style.display = 'none';
+    }
+    function clearForm() {
+      ['logins_per_week', 'avg_time_per_session', 'quiz_score_avg', 'modules_completed', 'days_since_login', 'revisit_count', 'assignment_submissions', 'forum_activity', 'video_watch_pct', 'student_name', 'student_id'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('rr').style.display = 'none';
+      document.getElementById('single-err').style.display = 'none';
+    }
+
+    /* ── SINGLE PREDICT ── */
+    async function predictSingle() {
+      const fs = ['logins_per_week', 'avg_time_per_session', 'quiz_score_avg', 'modules_completed', 'days_since_login', 'revisit_count', 'assignment_submissions', 'forum_activity', 'video_watch_pct'];
+      const payload = {};
+      for (const f of fs) { const v = document.getElementById(f).value; if (v === '') { showErr('single-err', `Missing: ${f.replace(/_/g, ' ')}`); return; } payload[f] = parseFloat(v); }
+      setLoad(true);
+      document.getElementById('single-err').style.display = 'none';
+      document.getElementById('rr').style.display = 'none';
+      try {
+        const res = await fetch(`${API}/predict`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'API error');
+        showResult(data);
+      } catch (e) { showErr('single-err', `Cannot connect to API at ${API} — make sure Flask is running.`); }
+      finally { setLoad(false); }
+    }
+    function showResult(data) {
+      const p = data.risk_probability, l = rlevel(p), box = document.getElementById('rr');
+      box.className = `risk-result ${l}`;
+      document.getElementById('rr-icon').innerHTML = ricon(l);
+      document.getElementById('rr-label').textContent = rlabel(l);
+      document.getElementById('rr-prob').textContent = `Risk probability: ${(p * 100).toFixed(1)}%`;
+      document.getElementById('rr-msg').textContent = rmsg(l);
+      lucide.createIcons();
+      box.style.display = 'block';
+      setTimeout(() => document.getElementById('rr-bar').style.width = `${p * 100}%`, 50);
+      const name = document.getElementById('student_name').value || 'Unknown';
+      const id = document.getElementById('student_id').value || '—';
+      history.unshift({ name, id, level: l, prob: p, time: new Date().toLocaleTimeString() });
+      renderHist();
+    }
+    function setLoad(on) {
+      document.getElementById('btn-text').textContent = on ? 'Predicting...' : 'Predict Risk';
+      document.getElementById('btn-spin').classList.toggle('hidden', !on);
+    }
+
+    /* ── HISTORY ── */
+    function renderHist() {
+      const list = document.getElementById('hist-list');
+      if (!history.length) { list.innerHTML = '<div class="h-empty">No predictions yet.</div>'; document.getElementById('hist-chart-wrap').style.display = 'none'; return; }
+      list.innerHTML = history.map(h => `<div class="h-item"><div><div class="h-name">${h.name}</div><div class="h-id">${h.id} · ${h.time}</div></div><div class="h-right"><span class="h-pct">${(h.prob * 100).toFixed(1)}%</span><span class="badge ${h.level}">${rlabel(h.level)}</span></div></div>`).join('');
+      document.getElementById('hist-chart-wrap').style.display = 'block';
+      const c = { high: 0, medium: 0, low: 0 }; history.forEach(h => c[h.level]++);
+      if (histChart) histChart.destroy();
+      histChart = new Chart(document.getElementById('histChart'), { type: 'bar', data: { labels: ['High', 'Medium', 'Low'], datasets: [{ data: [c.high, c.medium, c.low], backgroundColor: ['#ef4444', '#f59e0b', '#22c55e'], borderRadius: 6, borderSkipped: false }] }, options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, responsive: true } });
+    }
+    function clearHist() { history = []; renderHist(); }
+
+    /* ── ERROR ── */
+    function showErr(id, msg) { const el = document.getElementById(id); el.textContent = msg; el.style.display = 'block'; }
+
+    /* ── CSV ── */
+    function handleFile(e) {
+      const file = e.target.files[0]; if (!file) return;
+      document.getElementById('drop-zone').querySelector('.uz-title').innerHTML = `<i data-lucide="file-text" style="width:18px;height:18px;vertical-align:text-bottom;margin-right:4px;"></i> ${file.name} ready`;
+      lucide.createIcons();
+      const r = new FileReader(); r.onload = ev => { batchData = parseCSV(ev.target.result); document.getElementById('batch-btn').disabled = !batchData.length; }; r.readAsText(file);
+    }
+    function parseCSV(text) {
+      const lines = text.trim().split('\n'); if (lines.length < 2) return [];
+      const hds = lines[0].split(',').map(h => h.trim());
+      return lines.slice(1).map((line, i) => {
+        const vals = line.split(','), obj = { _name: `Student ${i + 1}`, _id: `STU-${String(i + 1).padStart(3, '0')}` };
+        hds.forEach((h, j) => { if (h === 'name' || h === 'student_name') obj._name = vals[j]?.trim() || obj._name; else if (h === 'id' || h === 'student_id') obj._id = vals[j]?.trim() || obj._id; else obj[h] = parseFloat(vals[j]); });
+        return obj;
+      });
+    }
+
+    /* ── BATCH ── */
+    async function runBatch() {
+      if (!batchData.length) return;
+      document.getElementById('batch-txt').textContent = 'Running...'; document.getElementById('batch-spin').classList.remove('hidden');
+      document.getElementById('batch-err').style.display = 'none'; document.getElementById('batch-results').classList.add('hidden');
+      const students = batchData.map(s => { const c = { ...s }; delete c._name; delete c._id; return c; });
+      try {
+        const res = await fetch(`${API}/predict-batch`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ students }) });
+        const data = await res.json(); if (!res.ok) throw new Error(data.error || 'error');
+        batchRes = data.predictions; showBatch(data);
+      } catch (e) { showErr('batch-err', `Cannot connect to API at ${API}`); }
+      finally { document.getElementById('batch-txt').textContent = 'Run Batch Prediction'; document.getElementById('batch-spin').classList.add('hidden'); }
+    }
+    function showBatch(data) {
+      const c = { high: 0, medium: 0, low: 0 };
+      data.predictions.forEach(p => c[rlevel(p.risk_probability)]++);
+      document.getElementById('s-total').textContent = data.total_students;
+      document.getElementById('s-high').textContent = c.high;
+      document.getElementById('s-med').textContent = c.medium;
+      document.getElementById('s-low').textContent = c.low;
+      if (donut) donut.destroy();
+      donut = new Chart(document.getElementById('donutChart'), { type: 'doughnut', data: { labels: ['High', 'Medium', 'Low'], datasets: [{ data: [c.high, c.medium, c.low], backgroundColor: ['#ef4444', '#f59e0b', '#22c55e'], borderWidth: 0, hoverOffset: 6 }] }, options: { plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 10 } } }, cutout: '65%', responsive: true } });
+      if (barBatchChart) barBatchChart.destroy();
+      barBatchChart = new Chart(document.getElementById('barBatch'), { type: 'bar', data: { labels: ['High Risk', 'Medium Risk', 'Low Risk'], datasets: [{ data: [c.high, c.medium, c.low], backgroundColor: ['#ef4444', '#f59e0b', '#22c55e'], borderRadius: 6, borderSkipped: false }] }, options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } }, responsive: true } });
+      renderTbl('all');
+      document.getElementById('batch-results').classList.remove('hidden');
+
+      const batchStats = calculateBatchStats();
+      if (batchStats) {
+        updateAnalyticsUI(batchStats, "Batch Prediction");
+      }
+    }
+    function renderTbl(filter) {
+      const tbody = document.getElementById('tbl-body'); tbody.innerHTML = ''; let shown = 0;
+      batchRes.forEach((p, i) => {
+        const l = rlevel(p.risk_probability); if (filter !== 'all' && l !== filter) return; shown++;
+        const s = batchData[i] || {}, pct = (p.risk_probability * 100).toFixed(1);
+        tbody.innerHTML += `<tr><td>${i + 1}</td><td style="font-family:var(--sans)"><div style="font-weight:600">${s._name || `Student ${i + 1}`}</div><div style="font-size:11px;color:var(--text-3)">${s._id || '—'}</div></td><td>${s.logins_per_week ?? '—'}</td><td>${s.quiz_score_avg ?? '—'}</td><td>${s.modules_completed ?? '—'}</td><td>${s.days_since_login ?? '—'}</td><td>${s.video_watch_pct ?? '—'}</td><td><span class="badge ${l}">${rlabel(l)}</span></td><td><div class="mini-bar"><div class="mini-bg"><div class="mini-fill" style="width:${pct}%;background:${rcolor(l)}"></div></div><span style="font-size:11px;color:var(--text-3);min-width:36px">${pct}%</span></div></td></tr>`;
+      });
+      if (!shown) tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--text-3)">No students in this category.</td></tr>`;
+    }
+    function filterTbl(level, btn) {
+      document.querySelectorAll('.f-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); renderTbl(level);
+    }
+
+    /* ── DOWNLOAD ── */
+    function dlResults() {
+      if (!batchRes.length) return;
+      const rows = batchRes.map((p, i) => { const s = batchData[i] || {}, l = rlevel(p.risk_probability); return `${s._name || `Student ${i + 1}`},${s._id || ''},${rlabel(l)},${(p.risk_probability * 100).toFixed(1)}%`; });
+      dl('kodo_risk_results.csv', 'name,id,risk_level,risk_score\n' + rows.join('\n'));
+    }
+    function dlSample() {
+      const h = 'student_name,student_id,logins_per_week,avg_time_per_session,quiz_score_avg,modules_completed,days_since_login,revisit_count,assignment_submissions,forum_activity,video_watch_pct\n';
+      const rows = ['Rahul Sharma,STU-001,2,20,35,3,18,1,1,0,12', 'Priya Singh,STU-002,10,85,88,16,2,7,9,7,90', 'Amit Kumar,STU-003,4,45,55,9,10,3,5,3,50', 'Neha Patel,STU-004,1,10,28,2,25,0,1,0,8', 'Rohan Gupta,STU-005,9,75,78,14,3,6,8,6,82'].join('\n');
+      dl('kodo_sample.csv', h + rows);
+    }
+    function dl(name, content) { const a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(content); a.download = name; a.click(); }
+
+    /* ── DRAG DROP ── */
+    const dz = document.getElementById('drop-zone');
+    dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
+    dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+    dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag'); const f = e.dataTransfer.files[0]; if (f && f.name.endsWith('.csv')) { const r = new FileReader(); r.onload = ev => { batchData = parseCSV(ev.target.result); document.getElementById('batch-btn').disabled = !batchData.length; dz.querySelector('.uz-title').innerHTML = `<i data-lucide="file-text" style="width:18px;height:18px;vertical-align:text-bottom;margin-right:4px;"></i> ${f.name} ready`; lucide.createIcons(); }; r.readAsText(f); } });
+
+    /* ── CHARTS ── */
+    let overviewDone = false, analyticsDone = false;
+
+    function initOverview() {
+      if (overviewDone) return; overviewDone = true;
+      new Chart(document.getElementById('modelChart'), { type: 'bar', data: { labels: ['Logistic Regression', 'Random Forest', 'XGBoost'], datasets: [{ label: 'F1 Score', data: [0.928, 0.930, 0.930], backgroundColor: ['#94a3b8', '#3b82f6', '#0f172a'], borderRadius: 6, borderSkipped: false }, { label: 'AUC', data: [0.956, 0.978, 0.982], backgroundColor: ['#cbd5e1', '#93c5fd', '#475569'], borderRadius: 6, borderSkipped: false }] }, options: { plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 10 } } }, scales: { y: { min: 0.9, max: 1.0 } }, responsive: true } });
+
+      if (trainingStatsCached) {
+        updateOverviewUI(trainingStatsCached);
+      } else {
+        const fallback = {
+          total_students: 1200,
+          at_risk_rate: 45.2,
+          eng_chart_data: [82, 65, 41, 18, 7]
+        };
+        updateOverviewUI(fallback);
+      }
+    }
+
+    function updateOverviewUI(stats) {
+      document.getElementById('ov-total-records').textContent = formatCount(stats.total_students);
+      document.getElementById('ov-at-risk-rate').innerHTML = `${stats.at_risk_rate}<span style="font-size:18px;font-weight:600">%</span>`;
+
+      if (overviewEngChart) overviewEngChart.destroy();
+      overviewEngChart = new Chart(document.getElementById('engChart'), {
+        type: 'bar',
+        data: {
+          labels: ['0–2', '3–4', '5–7', '8–10', '11–13'],
+          datasets: [{
+            label: 'At-Risk %',
+            data: stats.eng_chart_data,
+            backgroundColor: ['#ef4444', '#f97316', '#f59e0b', '#22c55e', '#16a34a'],
+            borderRadius: 6,
+            borderSkipped: false
+          }]
+        },
+        options: {
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } } },
+          responsive: true
+        }
+      });
+    }
+
+    function initAnalytics() {
+      if (analyticsDone) return; analyticsDone = true;
+      const sigs = [{ name: 'Video Watch %', pct: 33, color: '#ef4444' }, { name: 'Assignment Submissions', pct: 20, color: '#f97316' }, { name: 'Forum Activity', pct: 15, color: '#f59e0b' }, { name: 'Revisit Count', pct: 11, color: '#eab308' }, { name: 'Avg Session Time', pct: 6, color: '#3b82f6' }, { name: 'Quiz Score Avg', pct: 5, color: '#6366f1' }, { name: 'Modules Completed', pct: 4, color: '#8b5cf6' }, { name: 'Logins / Week', pct: 3, color: '#a78bfa' }, { name: 'Days Since Login', pct: 3, color: '#c4b5fd' }];
+      document.getElementById('signal-bars').innerHTML = sigs.map(s => `<div class="signal-bar-item"><div class="signal-row"><span class="signal-name">${s.name}</span><span class="signal-pct">${s.pct}%</span></div><div class="signal-bg"><div class="signal-fill" style="width:${s.pct * 2.8}%;background:${s.color};"></div></div></div>`).join('');
+
+      if (trainingStatsCached && currentAnalyticsSource === "Training Dataset") {
+        updateAnalyticsUI(trainingStatsCached);
+      } else if (currentAnalyticsSource === "Training Dataset") {
+        const fallback = {
+          total_students: 1200,
+          at_risk_rate: 45.2,
+          avg_quiz_score: 59.5,
+          avg_video_watch: 51,
+          eng_chart_data: [82, 65, 41, 18, 7],
+          cohort_chart_data: {
+            'High Risk': [58, 22, 4],
+            'Medium Risk': [24, 31, 12],
+            'Low Risk': [18, 47, 84]
+          }
+        };
+        updateAnalyticsUI(fallback);
+      }
+    }
+
+    function updateAnalyticsUI(stats, sourceName) {
+      if (sourceName) {
+        currentAnalyticsSource = sourceName;
+        if (document.getElementById('page-analytics').classList.contains('active')) {
+          document.getElementById('topbar-sub').textContent = `Data insights & business impact — Viewing ${currentAnalyticsSource}`;
+        }
+      }
+
+      document.getElementById('an-total-students').textContent = formatCount(stats.total_students);
+      document.getElementById('an-at-risk-rate').innerHTML = `${stats.at_risk_rate}<span style="font-size:16px">%</span>`;
+      document.getElementById('an-avg-quiz').textContent = stats.avg_quiz_score;
+      document.getElementById('an-avg-video').innerHTML = `${stats.avg_video_watch}<span style="font-size:16px">%</span>`;
+
+      if (anEngChart) anEngChart.destroy();
+      anEngChart = new Chart(document.getElementById('an-eng'), {
+        type: 'bar',
+        data: {
+          labels: ['0–2 logins', '3–4', '5–7', '8–10', '11–13'],
+          datasets: [{
+            label: 'At-Risk %',
+            data: stats.eng_chart_data,
+            backgroundColor: ['#ef4444', '#f97316', '#f59e0b', '#22c55e', '#16a34a'],
+            borderRadius: 6,
+            borderSkipped: false
+          }]
+        },
+        options: {
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } } },
+          responsive: true
+        }
+      });
+
+      if (anCohortChart) anCohortChart.destroy();
+      anCohortChart = new Chart(document.getElementById('an-cohort'), {
+        type: 'bar',
+        data: {
+          labels: ['Low Engagement', 'Mid Engagement', 'High Engagement'],
+          datasets: [
+            { label: 'High Risk', data: stats.cohort_chart_data['High Risk'], backgroundColor: '#ef4444', borderRadius: 4 },
+            { label: 'Medium Risk', data: stats.cohort_chart_data['Medium Risk'], backgroundColor: '#f59e0b', borderRadius: 4 },
+            { label: 'Low Risk', data: stats.cohort_chart_data['Low Risk'], backgroundColor: '#22c55e', borderRadius: 4 }
+          ]
+        },
+        options: {
+          plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 10 } } },
+          responsive: true
+        }
+      });
+    }
+
+    function calculateBatchStats() {
+      if (!batchData.length || !batchRes.length) return null;
+
+      const total = batchData.length;
+      let atRiskCount = 0;
+      let quizSum = 0;
+      let videoSum = 0;
+
+      const engBins = {
+        '0–2 logins': { total: 0, risk: 0 },
+        '3–4': { total: 0, risk: 0 },
+        '5–7': { total: 0, risk: 0 },
+        '8–10': { total: 0, risk: 0 },
+        '11–13': { total: 0, risk: 0 }
+      };
+
+      const cohorts = {
+        'Low Engagement': { high: 0, medium: 0, low: 0 },
+        'Mid Engagement': { high: 0, medium: 0, low: 0 },
+        'High Engagement': { high: 0, medium: 0, low: 0 }
+      };
+
+      for (let i = 0; i < total; i++) {
+        const s = batchData[i];
+        const p = batchRes[i].risk_probability;
+        const l = rlevel(p);
+        const isAtRisk = p >= 0.50;
+
+        if (isAtRisk) atRiskCount++;
+        quizSum += parseFloat(s.quiz_score_avg ?? 0);
+        videoSum += parseFloat(s.video_watch_pct ?? 0);
+
+        const logins = parseFloat(s.logins_per_week ?? 0);
+        let binName = '11–13';
+        if (logins <= 2) binName = '0–2 logins';
+        else if (logins <= 4) binName = '3–4';
+        else if (logins <= 7) binName = '5–7';
+        else if (logins <= 10) binName = '8–10';
+
+        engBins[binName].total++;
+        if (isAtRisk) engBins[binName].risk++;
+
+        let cohortName = 'High Engagement';
+        if (logins <= 3) cohortName = 'Low Engagement';
+        else if (logins <= 7) cohortName = 'Mid Engagement';
+
+        cohorts[cohortName][l]++;
+      }
+
+      const engChartData = [];
+      ['0–2 logins', '3–4', '5–7', '8–10', '11–13'].forEach(label => {
+        const b = engBins[label];
+        const pct = b.total > 0 ? (b.risk / b.total * 100) : 0;
+        engChartData.push(parseFloat(pct.toFixed(1)));
+      });
+
+      const cohortChartData = {
+        'High Risk': [cohorts['Low Engagement'].high, cohorts['Mid Engagement'].high, cohorts['High Engagement'].high],
+        'Medium Risk': [cohorts['Low Engagement'].medium, cohorts['Mid Engagement'].medium, cohorts['High Engagement'].medium],
+        'Low Risk': [cohorts['Low Engagement'].low, cohorts['Mid Engagement'].low, cohorts['High Engagement'].low]
+      };
+
+      return {
+        total_students: total,
+        at_risk_rate: parseFloat((atRiskCount / total * 100).toFixed(1)),
+        avg_quiz_score: parseFloat((quizSum / total).toFixed(1)),
+        avg_video_watch: parseFloat((videoSum / total).toFixed(1)),
+        eng_chart_data: engChartData,
+        cohort_chart_data: cohortChartData
+      };
+    }
+
+    function formatCount(num) {
+      return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
+    async function loadTrainingStats() {
+      try {
+        const res = await fetch(`${API}/training-stats`);
+        if (!res.ok) throw new Error("API error");
+        const data = await res.json();
+        trainingStatsCached = data;
+        if (overviewDone) updateOverviewUI(data);
+        if (analyticsDone && currentAnalyticsSource === "Training Dataset") {
+          updateAnalyticsUI(data);
+        }
+      } catch (e) {
+        console.warn("Could not load dynamic training stats from API:", e);
+      }
+    }
+
+    // init overview charts on load
+    window.addEventListener('load', () => {
+      initOverview();
+      lucide.createIcons();
+      loadTrainingStats();
+    });
+  </script>
+</body>
+
+</html>
