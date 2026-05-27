@@ -39,29 +39,43 @@
 
 ### Overview — Dropout Prediction Dashboard
 ![Overview Dashboard](screenshots/Screenshot_2026-05-27_213640.png)
+
 > Live model stats, at-risk rate by engagement level, and model comparison across Logistic Regression, Random Forest, and XGBoost.
 
-### Analytics — Top Dropout Signals & Business Impact
-![Analytics Top Signals](screenshots/Screenshot_2026-05-27_213723.png)
-> XGBoost feature importance ranked — Video Watch % dominates at 33%. Business impact estimates show ~206 students saved per year with early alerts.
-
-### Analytics — Engagement Cohorts & Risk Breakdown
-![Analytics Cohorts](screenshots/Screenshot_2026-05-27_213743.png)
-> At-risk rate drops sharply as weekly logins increase. Cohort breakdown shows High / Medium / Low risk distribution across engagement groups.
-
-### Analytics — Key Findings & Model Performance
-![Analytics Findings](screenshots/Screenshot_2026-05-27_213759.png)
-> Four data-driven insights for the product team, plus model performance summary: F1 0.93, ROC-AUC 0.978, Accuracy 94%, CV Std Dev 0.008.
+---
 
 ### Risk Check — Individual Student Prediction
-![Risk Check](screenshots/Screenshot_2026-05-27_213818.png)
+![Risk Check](screenshots/Screenshot_2026-05-27_213658.png)
+
 > Instructors enter 9 engagement signals for a student and get an instant risk prediction with session history tracking.
 
+---
+
 ### Batch Check — Class-Wide CSV Upload
-![Batch Check](screenshots/Screenshot_2026-05-27_213658.png)
+![Batch Check](screenshots/Screenshot_2026-05-27_213723.png)
+
 > Upload a full class CSV and run bulk predictions in one click. Exports results, filters by risk level, and shows donut chart breakdown.
 
 ---
+
+### Analytics — Engagement Cohorts & Risk Breakdown
+![Analytics Cohorts](screenshots/Screenshot_2026-05-27_213743.png)
+
+> At-risk rate drops sharply as weekly logins increase. Cohort breakdown shows High / Medium / Low risk distribution across engagement groups.
+
+---
+
+### Analytics — Top Dropout Signals & Business Impact
+![Analytics Top Signals](screenshots/Screenshot_2026-05-27_213759.png)
+
+> XGBoost feature importance ranked — Video Watch % dominates at 33%. Business impact estimates show ~206 students saved per year with early alerts.
+
+---
+
+### Analytics — Key Findings & Model Performance
+![Analytics Findings](screenshots/Screenshot_2026-05-27_213818.png)
+
+> Four data-driven insights for the product team, plus model performance summary: F1 0.93, ROC-AUC 0.978, Accuracy 94%, CV Std Dev 0.008.
 
 ## 🧠 What Is This?
 
